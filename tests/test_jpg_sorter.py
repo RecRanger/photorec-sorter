@@ -112,7 +112,7 @@ def test_sorts_by_real_exif_dates(tmp_path: Path) -> None:
     # --- Assertions ---
 
     # date-unknown must NOT exist (dates are not today)
-    assert not (image_dir / jpg_sorter.unknownDateFolderName).exists()
+    assert not (image_dir / jpg_sorter.UNKNOWN_DATE_FOLDER_NAME).exists()
 
     # Event folders created
     event1 = image_dir / "2022" / "1"

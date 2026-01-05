@@ -88,7 +88,7 @@ def sort_photorec_folder(
             image = open(source_file_path, "rb")
             try:
                 exifTags = exifread.process_file(image, details=False)
-                creationTime = jpg_sorter.getMinimumCreationTime(exifTags)
+                creationTime = jpg_sorter.get_min_creation_time_from_exif(exifTags)
                 creationTime = strptime(str(creationTime), "%Y:%m:%d %H:%M:%S")
                 creationTime = strftime("%Y%m%d_%H%M%S", creationTime)
                 file_name = str(creationTime) + "." + extension.lower()

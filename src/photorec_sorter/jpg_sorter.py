@@ -1,15 +1,16 @@
+from datetime import datetime, timedelta
 import os
-import ntpath
 from pathlib import Path
 from time import localtime, strftime, strptime, mktime
 import shutil
 
 import exifread
+from loguru import logger
 
-unknownDateFolderName = "date-unknown"
+UNKNOWN_DATE_FOLDER_NAME = "date-unknown"
 
 
-def getMinimumCreationTime(exif_data):
+def get_min_creation_time_from_exif(exif_data):
     creationTime = None
     dateTime = exif_data.get("DateTime")
     if dateTime is None:
@@ -34,27 +35,26 @@ def getMinimumCreationTime(exif_data):
     return creationTime
 
 
-def postprocessImage(images: list[tuple[float, str]], imageDirectory, fileName) -> None:
+def get_image_creation_timestamp(image_path: Path) -> datetime:
     """Writes the image creation time and path to the images list."""
-    imagePath = os.path.join(imageDirectory, fileName)
-    with Path(imagePath).open("rb") as image:
-        creationTime = None
+    with image_path.open("rb") as image:
+        creation_time = None
         try:
             exifTags = exifread.process_file(image, details=False)
-            creationTime = getMinimumCreationTime(exifTags)
+            creation_time = get_min_creation_time_from_exif(exifTags)
         except Exception:
-            print("invalid exif tags for " + fileName)
+            logger.warning(f"Failed to read EXIF from image: {image_path}")
 
-        # distinct different time types
-        if creationTime is None:
-            creationTime = localtime(os.path.getctime(imagePath))
+        # Distinct different time types.
+        if creation_time is None:
+            creation_time = localtime(os.path.getctime(image_path))
         else:
             try:
-                creationTime = strptime(str(creationTime), "%Y:%m:%d %H:%M:%S")
+                creation_time = strptime(str(creation_time), "%Y:%m:%d %H:%M:%S")
             except Exception:
-                creationTime = localtime(os.path.getctime(imagePath))
+                creation_time = localtime(os.path.getctime(image_path))
 
-        images.append((mktime(creationTime), imagePath))
+    return datetime.fromtimestamp(mktime(creation_time))
 
 
 # Creates the requested path recursively.
@@ -75,47 +75,42 @@ def createNewFolder(destinationRoot, year, month, eventNumber):
 
 
 def createUnknownDateFolder(destinationRoot):
-    path = os.path.join(destinationRoot, unknownDateFolderName)
+    path = os.path.join(destinationRoot, UNKNOWN_DATE_FOLDER_NAME)
     createPath(path)
 
 
 def writeImages(
-    images: list[tuple[float, str]],
+    images: list[tuple[datetime, Path]],
     destination_root: Path,
     *,
     min_event_delta_days: int | float,
     enable_split_by_month: bool = False,
 ) -> None:
-    minEventDelta = min_event_delta_days * 60 * 60 * 24  # convert in seconds
+    minEventDelta = timedelta(days=min_event_delta_days)
     sortedImages = sorted(images)
     previousTime = None
     eventNumber = 0
     previousDestination: str | Path | None = None
     today = strftime("%d/%m/%Y")
 
-    for imageTuple in sortedImages:
-        destinationFilePath = ""
-        t = localtime(imageTuple[0])
-        year = strftime("%Y", t)
-        month = enable_split_by_month and strftime("%m", t) or None
-        creationDate = strftime("%d/%m/%Y", t)
-        fileName = ntpath.basename(imageTuple[1])
+    for image_datetime, image_path in sortedImages:
+        year = image_datetime.strftime("%Y")
+        month = enable_split_by_month and image_datetime.strftime("%m") or None
+        creationDate = image_datetime.strftime("%d/%m/%Y")
 
         if creationDate == today:
             createUnknownDateFolder(destination_root)
-            destination: str | Path = os.path.join(
-                destination_root, unknownDateFolderName
-            )
-            destinationFilePath = os.path.join(destination, fileName)
+            destination: Path = destination_root / UNKNOWN_DATE_FOLDER_NAME
+            destinationFilePath: Path = destination / image_path.name
 
         else:
             if (previousTime is None) or (
-                (previousTime + minEventDelta) < imageTuple[0]
+                (previousTime + minEventDelta) < image_datetime
             ):
                 eventNumber = eventNumber + 1
                 createNewFolder(destination_root, year, month, eventNumber)
 
-            previousTime = imageTuple[0]
+            previousTime = image_datetime
 
             destComponents = [destination_root, year, month, str(eventNumber)]
             destComponents = [v for v in destComponents if v is not None]
@@ -140,10 +135,13 @@ def writeImages(
 def postprocess_organize_images(
     imageDirectory: Path, *, min_event_delta_days: int, enable_split_by_month: bool
 ) -> None:
-    images: list[tuple[float, str]] = []
-    for root, dirs, files in os.walk(imageDirectory):
-        for file in files:
-            postprocessImage(images, imageDirectory, file)
+    images: list[tuple[datetime, Path]] = [
+        (get_image_creation_timestamp(image_path), image_path)
+        for image_path in imageDirectory.rglob("*")
+        if image_path.is_file()
+    ]
+
+    logger.info(f"Found {len(images):,} images to organize.")
 
     writeImages(
         images,
