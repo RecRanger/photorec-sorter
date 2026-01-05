@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+from pathlib import Path
 
 from loguru import logger
 
@@ -80,8 +81,8 @@ def main_cli():
     logger.info(f"Arguments: {args}")
 
     sort_photorec_folder(
-        source=args.source,
-        destination=args.destination,
+        source=Path(args.source),
+        destination=Path(args.destination),
         max_files_per_folder=args.max_per_dir,
         enable_split_months=args.split_months,
         enable_keep_filename=args.keep_filename,
