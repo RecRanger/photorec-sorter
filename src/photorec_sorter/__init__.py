@@ -1,5 +1,7 @@
-VERSION = "0.1.1"
+from photorec_sorter import cli, recovery
+
+VERSION = "0.2.1"
 __version__ = VERSION
 
-from photorec_sorter import cli  # noqa
-from photorec_sorter import recovery  # noqa
+
+__all__ = ["cli", "recovery"]

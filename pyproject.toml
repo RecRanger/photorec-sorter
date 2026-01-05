@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "photorec-sorter"
-version = "0.2.0"
+version = "0.2.1"
 authors = [{ name = "RecRanger", email = "RecRanger+package@proton.me" }]
 description = "A tool to sort/organize files recovered by the PhotoRec tool"
 readme = "README.md"
