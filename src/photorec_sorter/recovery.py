@@ -10,7 +10,7 @@ from photorec_sorter import jpg_sorter
 from photorec_sorter import files_per_folder_limiter
 
 
-def getNumberOfFilesInFolderRecursively(start_path: Path) -> int:
+def count_files_in_folder_recursively(start_path: Path) -> int:
     numberOfFiles = 0
     for dirpath, dirnames, filenames in os.walk(start_path):
         for f in filenames:
@@ -59,7 +59,7 @@ def sort_photorec_folder(
     else:
         logger.info("Filename Plan: Rename files sequentially, like '1.jpg'")
 
-    total_file_count = getNumberOfFilesInFolderRecursively(source)
+    total_file_count = count_files_in_folder_recursively(source)
     if total_file_count > 100:
         log_frequency_file_count = int(total_file_count / 100)
     else:

@@ -63,7 +63,9 @@ options:
 
 All directories contain a maximum of 500 files by default. If there are more for a file type, numbered subdirectories are created. If you want another file-limit, e.g. 1000, pass that number with the `-n` flag.
 
-`photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_folder" -n1000`
+```bash
+photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_folder" -n1000
+```
 
 #### Folder for Each Month
 
