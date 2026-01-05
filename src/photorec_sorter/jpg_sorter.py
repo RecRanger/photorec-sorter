@@ -137,7 +137,7 @@ def writeImages(
                 os.remove(imageTuple[1])
 
 
-def postprocessImages(
+def postprocess_organize_images(
     imageDirectory: Path, *, min_event_delta_days: int, enable_split_by_month: bool
 ) -> None:
     images: list[tuple[float, str]] = []

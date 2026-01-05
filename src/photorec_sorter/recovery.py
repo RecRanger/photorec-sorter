@@ -122,7 +122,7 @@ def sort_photorec_folder(
             )
 
     logger.info("Starting special file treatment (JPG sorting and folder splitting)...")
-    jpg_sorter.postprocessImages(
+    jpg_sorter.postprocess_organize_images(
         destination / "JPG",
         min_event_delta_days=min_event_delta_days,
         enable_split_by_month=enable_split_months,
