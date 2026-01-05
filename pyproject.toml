@@ -8,7 +8,7 @@ version = "0.1.1"
 authors = [{ name = "RecRanger", email = "RecRanger+package@proton.me" }]
 description = "A tool to sort/organize files recovered by the PhotoRec tool"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: The Unlicense (Unlicense)",
@@ -17,8 +17,8 @@ classifiers = [
 
 dependencies = ["loguru", "exifread"]
 
-[project.optional-dependencies]
-dev = ["black", "flake8"]
+[dependency-groups]
+dev = ["pyright>=1.1.407", "pytest>=8.3.5", "ruff>=0.14.10"]
 
 [project.urls]
 Homepage = "https://github.com/RecRanger/photorec-sorter"
@@ -26,3 +26,6 @@ Issues = "https://github.com/RecRanger/photorec-sorter/issues"
 
 [project.scripts]
 photorec_sorter = "photorec_sorter.cli:main_cli"
+
+[tool.pyright]
+typeCheckingMode = "basic"

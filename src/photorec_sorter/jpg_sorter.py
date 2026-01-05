@@ -1,5 +1,6 @@
 import os
 import ntpath
+from pathlib import Path
 from time import localtime, strftime, strptime, mktime
 import shutil
 
@@ -33,27 +34,27 @@ def getMinimumCreationTime(exif_data):
     return creationTime
 
 
-def postprocessImage(images, imageDirectory, fileName):
+def postprocessImage(images: list[tuple[float, str]], imageDirectory, fileName) -> None:
+    """Writes the image creation time and path to the images list."""
     imagePath = os.path.join(imageDirectory, fileName)
-    image = open(imagePath, "rb")
-    creationTime = None
-    try:
-        exifTags = exifread.process_file(image, details=False)
-        creationTime = getMinimumCreationTime(exifTags)
-    except:
-        print("invalid exif tags for " + fileName)
-
-    # distinct different time types
-    if creationTime is None:
-        creationTime = localtime(os.path.getctime(imagePath))
-    else:
+    with Path(imagePath).open("rb") as image:
+        creationTime = None
         try:
-            creationTime = strptime(str(creationTime), "%Y:%m:%d %H:%M:%S")
-        except:
-            creationTime = localtime(os.path.getctime(imagePath))
+            exifTags = exifread.process_file(image, details=False)
+            creationTime = getMinimumCreationTime(exifTags)
+        except Exception:
+            print("invalid exif tags for " + fileName)
 
-    images.append((mktime(creationTime), imagePath))
-    image.close()
+        # distinct different time types
+        if creationTime is None:
+            creationTime = localtime(os.path.getctime(imagePath))
+        else:
+            try:
+                creationTime = strptime(str(creationTime), "%Y:%m:%d %H:%M:%S")
+            except Exception:
+                creationTime = localtime(os.path.getctime(imagePath))
+
+        images.append((mktime(creationTime), imagePath))
 
 
 # Creates the requested path recursively.
@@ -79,17 +80,19 @@ def createUnknownDateFolder(destinationRoot):
 
 
 def writeImages(
-    images, destinationRoot, min_event_delta_days, splitByMonth=False
-):
+    images: list[tuple[float, str]],
+    destinationRoot,
+    min_event_delta_days,
+    splitByMonth=False,
+) -> None:
     minEventDelta = min_event_delta_days * 60 * 60 * 24  # convert in seconds
     sortedImages = sorted(images)
     previousTime = None
     eventNumber = 0
-    previousDestination = None
+    previousDestination: str | Path | None = None
     today = strftime("%d/%m/%Y")
 
     for imageTuple in sortedImages:
-        destination = ""
         destinationFilePath = ""
         t = localtime(imageTuple[0])
         year = strftime("%Y", t)
@@ -99,7 +102,9 @@ def writeImages(
 
         if creationDate == today:
             createUnknownDateFolder(destinationRoot)
-            destination = os.path.join(destinationRoot, unknownDateFolderName)
+            destination: str | Path = os.path.join(
+                destinationRoot, unknownDateFolderName
+            )
             destinationFilePath = os.path.join(destination, fileName)
 
         else:
@@ -117,7 +122,7 @@ def writeImages(
 
             # it may be possible that an event covers 2 years.
             # in such a case put all the images to the event in the old year
-            if not (os.path.exists(destination)):
+            if not (os.path.exists(destination)) and (previousDestination is not None):
                 destination = previousDestination
                 # destination = os.path.join(destinationRoot, str(int(year) - 1), str(eventNumber))
 
@@ -132,7 +137,7 @@ def writeImages(
 
 
 def postprocessImages(imageDirectory, min_event_delta_days, splitByMonth):
-    images = []
+    images: list[tuple[float, str]] = []
     for root, dirs, files in os.walk(imageDirectory):
         for file in files:
             postprocessImage(images, imageDirectory, file)
