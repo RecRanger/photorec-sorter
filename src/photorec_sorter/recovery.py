@@ -1,17 +1,16 @@
 import os
+from pathlib import Path
 import shutil
 from time import strftime, strptime
 
-# dependencies
 import exifread
 from loguru import logger
 
-# project libraries
 from photorec_sorter import jpg_sorter
 from photorec_sorter import files_per_folder_limiter
 
 
-def getNumberOfFilesInFolderRecursively(start_path="."):
+def getNumberOfFilesInFolderRecursively(start_path: Path) -> int:
     numberOfFiles = 0
     for dirpath, dirnames, filenames in os.walk(start_path):
         for f in filenames:
@@ -26,15 +25,14 @@ def getNumberOfFilesInFolder(path):
 
 
 def sort_photorec_folder(
-    source: str,
-    destination: str,
+    source: Path,
+    destination: Path,
     max_files_per_folder: int,
     enable_split_months: bool,
     enable_keep_filename: bool,
     enable_datetime_filename: bool,
     min_event_delta_days: int,
-):
-
+) -> None:
     if not os.path.isdir(source):
         raise ValueError(f"Source directory does not exist: {source}")
     if not os.path.isdir(destination):
@@ -70,7 +68,6 @@ def sort_photorec_folder(
 
     cur_file_number = 0
     for root, dirs, files in os.walk(source, topdown=False):
-
         for file in files:
             extension = os.path.splitext(file)[1][1:].lower()
             source_file_path = os.path.join(root, file)
@@ -92,14 +89,10 @@ def sort_photorec_folder(
                 try:
                     exifTags = exifread.process_file(image, details=False)
                     creationTime = jpg_sorter.getMinimumCreationTime(exifTags)
-                    creationTime = strptime(
-                        str(creationTime), "%Y:%m:%d %H:%M:%S"
-                    )
+                    creationTime = strptime(str(creationTime), "%Y:%m:%d %H:%M:%S")
                     creationTime = strftime("%Y%m%d_%H%M%S", creationTime)
                     file_name = str(creationTime) + "." + extension.lower()
-                    while os.path.exists(
-                        os.path.join(dest_directory, file_name)
-                    ):
+                    while os.path.exists(os.path.join(dest_directory, file_name)):
                         index += 1
                         file_name = (
                             str(creationTime)
@@ -109,7 +102,7 @@ def sort_photorec_folder(
                             + "."
                             + extension.lower()
                         )
-                except:
+                except Exception:
                     file_name = file
                 image.close()
             else:
@@ -125,12 +118,10 @@ def sort_photorec_folder(
             cur_file_number += 1
             if (cur_file_number % log_frequency_file_count) == 0:
                 logger.info(
-                    f"{cur_file_number} / {total_file_count} processed ({cur_file_number/total_file_count:.2%})."
+                    f"{cur_file_number} / {total_file_count} processed ({cur_file_number / total_file_count:.2%})."
                 )
 
-    logger.info(
-        "Starting special file treatment (JPG sorting and folder splitting)..."
-    )
+    logger.info("Starting special file treatment (JPG sorting and folder splitting)...")
     jpg_sorter.postprocessImages(
         os.path.join(destination, "JPG"),
         min_event_delta_days,
@@ -138,8 +129,6 @@ def sort_photorec_folder(
     )
 
     logger.info("Applying max files-per-folder limit...")
-    files_per_folder_limiter.limitFilesPerFolder(
-        destination, max_files_per_folder
-    )
+    files_per_folder_limiter.limitFilesPerFolder(destination, max_files_per_folder)
 
     logger.info("Done.")

@@ -8,7 +8,6 @@ from photorec_sorter.recovery import sort_photorec_folder
 
 
 def get_args():
-
     description = """
 Sort files recovered by PhotoRec.
 
