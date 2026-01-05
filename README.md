@@ -2,6 +2,8 @@
 
 A tool to sort/organize files recovered by the [PhotoRec](https://www.cgsecurity.org/wiki/PhotoRec) tool
 
+This fork is maintained independently by RecRanger.
+
 ## Description
 
 PhotoRec does a great job when recovering deleted files. But the result is a huge, unsorted, unnamed amount of files. Especially for external hard drives serving as backup of all the personal data, sorting them is an endless job.
@@ -17,13 +19,12 @@ We define an "event" as a time span during them photos are taken. It has a delta
 Install this project:
 
 ```bash
-python3 -m pip install photorec_sorter
+uv tool install photorec_sorter
 ```
 
 Run this project with either of the following:
 
 ```bash
-python3 -m photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_folder"
 photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_folder"
 ```
 
@@ -33,13 +34,13 @@ The first output of the program is the number of files to copy. To count them mi
 
 ### Arguments
 
-For an overview of all arguments, run with the `-h` option: `python3 -m photorec_sorter -h`.
+For an overview of all arguments, run with the `-h` option: `photorec_sorter -h`.
 
 ```
 usage: photorec_sorter [-h] [-n MAX_PER_DIR] [-m] [-k] [-d MIN_EVENT_DELTA] [-j] src dest
 
-Sort files recovered by PhotoRec. The input files are first copied to the destination, sorted by file type. Then, JPG files are sorted based on creation year (and optionally month).
-Finally, any directories containing more than a maximum number of files are accordingly split into separate directories."
+Sort files recovered by PhotoRec. The input files are first copied to the destination, sorted by file type. Then, JPG files are sorted based on creation
+year (and optionally month). Finally, any directories containing more than a maximum number of files are accordingly split into separate directories."
 
 positional arguments:
   src                   source directory with files recovered by PhotoRec
@@ -62,7 +63,7 @@ options:
 
 All directories contain a maximum of 500 files by default. If there are more for a file type, numbered subdirectories are created. If you want another file-limit, e.g. 1000, pass that number with the `-n` flag.
 
-`python3 -m photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_folder" -n1000`
+`photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_folder" -n1000`
 
 #### Folder for Each Month
 
@@ -81,7 +82,7 @@ destination
 Sometimes, you might want to sort each year by month:
 
 ```bash
-python3 -m photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_folder" -m
+photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_folder" -m
 ```
 
 Now, the destination structure will be:
@@ -105,7 +106,7 @@ destination
 Use the `-k` parameter to keep the original filenames (as recovered):
 
 ```bash
-python3 -m photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_folder" -k
+photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_folder" -k
 ```
 
 #### Adjust Max Event Duration
@@ -113,7 +114,7 @@ python3 -m photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_fo
 For the case you want to reduce or increase the time span between events, simply use the parameter `-d`. The default is 4 days. To use 10 days, run:
 
 ```bash
-python3 -m photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_folder" -d10
+photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_folder" -d10
 ```
 
 #### Rename .jpg Files with EXIF Date/Time
@@ -121,7 +122,7 @@ python3 -m photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_fo
 If the original jpg image files were named by `<Date>_<Time>` it might be useful to rename the recovered files in the same way. This can be done by adding the `-j` flag.
 
 ```bash
-python3 -m photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_folder" -j
+photorec_sorter "path_to_files_recovered_by_PhotoRec" "destination_folder" -j
 ```
 
 If no EXIF data can be retrieved, the original filename is kept.

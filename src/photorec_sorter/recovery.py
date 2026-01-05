@@ -123,9 +123,9 @@ def sort_photorec_folder(
 
     logger.info("Starting special file treatment (JPG sorting and folder splitting)...")
     jpg_sorter.postprocessImages(
-        os.path.join(destination, "JPG"),
-        min_event_delta_days,
-        enable_split_months,
+        destination / "JPG",
+        min_event_delta_days=min_event_delta_days,
+        enable_split_by_month=enable_split_months,
     )
 
     logger.info("Applying max files-per-folder limit...")

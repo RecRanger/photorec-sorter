@@ -1,8 +1,9 @@
 import os
+from pathlib import Path
 import shutil
 
 
-def limitFilesPerFolder(folder, max_files_per_folder):
+def limitFilesPerFolder(folder: Path, max_files_per_folder: int) -> None:
     for root, dirs, files in os.walk(folder, topdown=False):
         for dir in dirs:
             dirPath = os.path.join(root, dir)

@@ -81,9 +81,10 @@ def createUnknownDateFolder(destinationRoot):
 
 def writeImages(
     images: list[tuple[float, str]],
-    destinationRoot,
-    min_event_delta_days,
-    splitByMonth=False,
+    destination_root: Path,
+    *,
+    min_event_delta_days: int | float,
+    enable_split_by_month: bool = False,
 ) -> None:
     minEventDelta = min_event_delta_days * 60 * 60 * 24  # convert in seconds
     sortedImages = sorted(images)
@@ -96,14 +97,14 @@ def writeImages(
         destinationFilePath = ""
         t = localtime(imageTuple[0])
         year = strftime("%Y", t)
-        month = splitByMonth and strftime("%m", t) or None
+        month = enable_split_by_month and strftime("%m", t) or None
         creationDate = strftime("%d/%m/%Y", t)
         fileName = ntpath.basename(imageTuple[1])
 
         if creationDate == today:
-            createUnknownDateFolder(destinationRoot)
+            createUnknownDateFolder(destination_root)
             destination: str | Path = os.path.join(
-                destinationRoot, unknownDateFolderName
+                destination_root, unknownDateFolderName
             )
             destinationFilePath = os.path.join(destination, fileName)
 
@@ -112,11 +113,11 @@ def writeImages(
                 (previousTime + minEventDelta) < imageTuple[0]
             ):
                 eventNumber = eventNumber + 1
-                createNewFolder(destinationRoot, year, month, eventNumber)
+                createNewFolder(destination_root, year, month, eventNumber)
 
             previousTime = imageTuple[0]
 
-            destComponents = [destinationRoot, year, month, str(eventNumber)]
+            destComponents = [destination_root, year, month, str(eventNumber)]
             destComponents = [v for v in destComponents if v is not None]
             destination = os.path.join(*destComponents)
 
@@ -136,10 +137,17 @@ def writeImages(
                 os.remove(imageTuple[1])
 
 
-def postprocessImages(imageDirectory, min_event_delta_days, splitByMonth):
+def postprocessImages(
+    imageDirectory: Path, *, min_event_delta_days: int, enable_split_by_month: bool
+) -> None:
     images: list[tuple[float, str]] = []
     for root, dirs, files in os.walk(imageDirectory):
         for file in files:
             postprocessImage(images, imageDirectory, file)
 
-    writeImages(images, imageDirectory, min_event_delta_days, splitByMonth)
+    writeImages(
+        images,
+        imageDirectory,
+        min_event_delta_days=min_event_delta_days,
+        enable_split_by_month=enable_split_by_month,
+    )
