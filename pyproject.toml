@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "photorec-sorter"
-version = "0.2.1"
+version = "0.2.2"
 authors = [{ name = "RecRanger", email = "RecRanger+package@proton.me" }]
 description = "A tool to sort/organize files recovered by the PhotoRec tool"
 readme = "README.md"
@@ -19,7 +19,7 @@ dependencies = ["loguru", "exifread"]
 
 [dependency-groups]
 dev = [
-    "pillow>=12.1.0",
+    "pillow>=12.1.0",   # For creating image files in tests.
     "pyright>=1.1.407",
     "pytest>=8.3.5",
     "ruff>=0.14.10",
