@@ -67,59 +67,59 @@ def sort_photorec_folder(
     logger.info(f"Total files to copy: {total_file_count:,}")
 
     cur_file_number = 0
-    for root, dirs, files in os.walk(source, topdown=False):
-        for file in files:
-            extension = os.path.splitext(file)[1][1:].lower()
-            source_file_path = os.path.join(root, file)
+    for source_file_path in sorted(source.rglob("*")):
+        if source_file_path.is_dir():
+            continue
 
+        extension = source_file_path.suffix[1:].lower()
+
+        if extension:
+            dest_directory = destination / extension
+        else:
+            dest_directory = destination / "no_extension"
+
+        dest_directory.mkdir(exist_ok=True)
+
+        if enable_keep_filename:
+            file_name = source_file_path.name
+
+        elif enable_datetime_filename and 0:
+            index = 0
+            image = open(source_file_path, "rb")
+            try:
+                exifTags = exifread.process_file(image, details=False)
+                creationTime = jpg_sorter.getMinimumCreationTime(exifTags)
+                creationTime = strptime(str(creationTime), "%Y:%m:%d %H:%M:%S")
+                creationTime = strftime("%Y%m%d_%H%M%S", creationTime)
+                file_name = str(creationTime) + "." + extension.lower()
+                while (dest_directory / file_name).exists():
+                    index += 1
+                    file_name = (
+                        str(creationTime)
+                        + "("
+                        + str(index)
+                        + ")"
+                        + "."
+                        + extension.lower()
+                    )
+            except Exception:
+                file_name = source_file_path.name
+            image.close()
+        else:
             if extension:
-                dest_directory = os.path.join(destination, extension)
+                file_name = str(cur_file_number) + "." + extension.lower()
             else:
-                dest_directory = os.path.join(destination, "no_extension")
+                file_name = str(cur_file_number)
 
-            if not os.path.exists(dest_directory):
-                os.mkdir(dest_directory)
+        dest_file_path = dest_directory / file_name
+        if not dest_file_path.exists():
+            shutil.copy2(source_file_path, dest_file_path)
 
-            if enable_keep_filename:
-                file_name = file
-
-            elif enable_datetime_filename:
-                index = 0
-                image = open(source_file_path, "rb")
-                try:
-                    exifTags = exifread.process_file(image, details=False)
-                    creationTime = jpg_sorter.getMinimumCreationTime(exifTags)
-                    creationTime = strptime(str(creationTime), "%Y:%m:%d %H:%M:%S")
-                    creationTime = strftime("%Y%m%d_%H%M%S", creationTime)
-                    file_name = str(creationTime) + "." + extension.lower()
-                    while os.path.exists(os.path.join(dest_directory, file_name)):
-                        index += 1
-                        file_name = (
-                            str(creationTime)
-                            + "("
-                            + str(index)
-                            + ")"
-                            + "."
-                            + extension.lower()
-                        )
-                except Exception:
-                    file_name = file
-                image.close()
-            else:
-                if extension:
-                    file_name = str(cur_file_number) + "." + extension.lower()
-                else:
-                    file_name = str(cur_file_number)
-
-            dest_file_path = os.path.join(dest_directory, file_name)
-            if not os.path.exists(dest_file_path):
-                shutil.copy2(source_file_path, dest_file_path)
-
-            cur_file_number += 1
-            if (cur_file_number % log_frequency_file_count) == 0:
-                logger.info(
-                    f"{cur_file_number} / {total_file_count} processed ({cur_file_number / total_file_count:.2%})."
-                )
+        cur_file_number += 1
+        if (cur_file_number % log_frequency_file_count) == 0:
+            logger.info(
+                f"{cur_file_number} / {total_file_count} processed ({cur_file_number / total_file_count:.2%})."
+            )
 
     logger.info("Starting special file treatment (JPG sorting and folder splitting)...")
     jpg_sorter.postprocessImages(
@@ -129,6 +129,8 @@ def sort_photorec_folder(
     )
 
     logger.info("Applying max files-per-folder limit...")
-    files_per_folder_limiter.limitFilesPerFolder(destination, max_files_per_folder)
+    files_per_folder_limiter.limit_files_per_folder(
+        destination, max_files_per_folder=max_files_per_folder
+    )
 
     logger.info("Done.")
