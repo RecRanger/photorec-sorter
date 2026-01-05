@@ -37,8 +37,17 @@ def test_empty_folder(
     )
 
 
-@pytest.mark.parametrize("enable_keep_filename", [True, False])
-def test_basic_sort_no_images(tmp_path: Path, enable_keep_filename: bool) -> None:
+@pytest.mark.parametrize(
+    "enable_keep_filename", [True, False], ids=["keep", "not_keep"]
+)
+@pytest.mark.parametrize(
+    "enable_datetime_filename", [True, False], ids=["datetime", "not_datetime"]
+)
+def test_basic_sort_no_images(
+    tmp_path: Path,
+    enable_keep_filename: bool,
+    enable_datetime_filename: bool,  # Should have no effect on output.
+) -> None:
     source_path = tmp_path / "source"
     destination_path = tmp_path / "destination"
     source_path.mkdir()
@@ -46,9 +55,9 @@ def test_basic_sort_no_images(tmp_path: Path, enable_keep_filename: bool) -> Non
 
     # Seed the source folder with tons of files.
     for file_path in (
-        [source_path / "recup_dir.1" / f"file_{i}.txt" for i in range(123)]
-        + [source_path / "recup_dir.1" / f"db_{i}.sqlite" for i in range(71)]
-        + [source_path / "recup_dir.2" / f"doc_{i}.pdf" for i in range(93)]
+        [source_path / "recup_dir.1" / f"file_{i:03}.txt" for i in range(123)]
+        + [source_path / "recup_dir.1" / f"db_{i:03}.sqlite" for i in range(71)]
+        + [source_path / "recup_dir.2" / f"doc_{i:03}.pdf" for i in range(93)]
     ):
         file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.write_text(str(uuid.uuid4()) + "\n" + file_path.name)
@@ -59,7 +68,7 @@ def test_basic_sort_no_images(tmp_path: Path, enable_keep_filename: bool) -> Non
         max_files_per_folder=100,
         enable_split_months=False,
         enable_keep_filename=enable_keep_filename,
-        enable_datetime_filename=False,
+        enable_datetime_filename=enable_datetime_filename,
         min_event_delta_days=1,
     )
 
@@ -70,10 +79,10 @@ def test_basic_sort_no_images(tmp_path: Path, enable_keep_filename: bool) -> Non
 
     if enable_keep_filename:
         # txt gets an extra layer of folders because there are over 100.
-        assert (destination_path / "txt" / "1" / "file_0.txt").is_file()
-        assert (destination_path / "txt" / "1" / "file_99.txt").is_file()
+        assert (destination_path / "txt" / "1" / "file_000.txt").is_file()
+        assert (destination_path / "txt" / "1" / "file_099.txt").is_file()
         assert (destination_path / "txt" / "2" / "file_100.txt").is_file()
         assert (destination_path / "txt" / "2" / "file_101.txt").is_file()
 
-        assert (destination_path / "sqlite" / "db_0.sqlite").is_file()
-        assert (destination_path / "pdf" / "doc_0.pdf").is_file()
+        assert (destination_path / "sqlite" / "db_000.sqlite").is_file()
+        assert (destination_path / "pdf" / "doc_000.pdf").is_file()
